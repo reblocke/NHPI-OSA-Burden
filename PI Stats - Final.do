@@ -1,16 +1,28 @@
 * Pacific Islander Sleep Disordered Breathing Statistics
+* 3-13-22; last update 2022-11-28
 
 capture log close
 *log using temp.log
 * Data processing
 clear
-import excel "Pacific Islander Data New.xlsx", sheet("all") firstrow 
 
-*drop un-needed variables
-drop Lastname Firstname MRN DOB OriginalAge Dateof1stsleepclinicvisit Dateofsleepstudy Heightftin Heightin Weightlbs CV1Met2CVMet3none4 Miscellaneous DurationofDownload 
+import excel "Pacific Islander Data New - ESS.xlsx", sheet("all") firstrow 
+program define datetime 
+end
+
+capture mkdir "Results and Figures"
+capture mkdir "Results and Figures/$S_DATE/" //make new folder for figure output if needed
 
 *drop observations 146-223, these were just scratch pad calculations
 drop in 146/223 
+drop if !missing(duplicate_flag) //drop 4 identified duplicates
+
+//Drop un-needed variables
+
+//PHI if present
+//drop Lastname Firstname MRN DOB
+//remaining variables
+drop OriginalAge Dateof1stsleepclinicvisit Dateofsleepstudy Heightftin Heightin Weightlbs CV1Met2CVMet3none4 Miscellaneous DurationofDownload duplicate_flag
 
 *Generate and Label Female variable
 replace Sex="M" if Sex== "M "
@@ -42,12 +54,24 @@ gen AHI_n = round(real(AHI), 0.1)
 gen REMAHI_n = real(REMAHI)
 gen NREMAHI_n = real(NREMAHI)
 gen SupineAHI_n = real(SupineAHI)
-gen ODI3 = real(ODI)
-gen ODI4 = real(Z)
+gen ODI3_n = round(real(ODI3), 0.1)
+gen ODI4_n = round(real(ODI4), 0.1)
 gen MinBelow89 = real(Timebelow89minutes)
 gen PercBelow89 = real(Timebelow89percentage)
 replace Ageatsleepstudy = round(Ageatsleepstudy, 0.1)
 replace BMI = round(BMI, 0.1)
+destring EpworthSleepinessScaleAtDiag, replace force
+
+//excessive_sleepiness? ESS 0-10 normal, 11 or higher = excessive daytime sleepiness
+recode EpworthSleepinessScaleAtDiag min/10=0 11/max=1, gen(excessive_sleepiness)
+label define sleepy_lab 0 "No Excessive Daytime Sleepinesss" 1 "Excessive Daytime Sleepiness"
+label variable excessive_sleepiness "Excessive Daytime Sleepiness?"
+label values excessive_sleepiness sleepy_lab
+
+npresent EpworthSleepinessScaleAtDiag
+nmissing EpworthSleepinessScaleAtDiag
+tab excessive_sleepiness
+summarize EpworthSleepinessScaleAtDiag, detail
 
 *Relabel OSA Severity
 gen OSASeverity = Severity123 - 1
@@ -83,8 +107,8 @@ label variable REMAHI_n "AHI during REM sleep (events/hr)"
 label variable NREMAHI_n "AHI during NREM sleep (events/hr)"
 label variable SupineAHI_n "AHI while supine (events/hr)"
 label variable LowestSpO2 "Lowest SpO2 recorded (%)"
-label variable ODI3 "ODI, 3% desturation threshold (events/hr)"
-label variable ODI4 "ODI, 4% desaturation threshold (events/hr)"
+label variable ODI3_n "ODI, 3% desturation threshold (events/hr)"
+label variable ODI4_n "ODI, 4% desaturation threshold (events/hr)"
 label variable Female "Female gender"
 label variable HSAT "Home Sleep Study"
 label variable MinBelow89 "Minutes with saturation below 89%"
@@ -98,6 +122,7 @@ label variable FlowAHI "On treatment AHI estimated by PAP machine"
 label variable Goals "Meeting adherence goal: +70% nights, +4h used"
 label variable GoalsSens "Meeting adherence goal of +70% nights used, missing = no"
 label variable CumulativeUse "Nightly Usage"
+label variable EpworthSleepinessScaleAtDiag "ESS (at diagnosis)"
 
 * Generate severe disease indicator
 recode OSASeverity 0=0  1=0  2=1, gen(severe_dz) 
@@ -126,7 +151,15 @@ save PI_data, replace
 
 use PI_data, clear
 
-nmissing
+//nmissing
+//npresent
+mdesc
+
+tab AHI_n OSASeverity
+
+tabulate OSASeverity, summarize(EpworthSleepinessScaleAtDiag)
+
+tabstat EpworthSleepinessScaleAtDiag , statistics(mean sd median p25 p75) by(OSASeverity)	
 
 *Table 1 - version w normal distributions stratified by Gender
 table1_mc, by(Female) ///
@@ -144,6 +177,8 @@ Lungdisease bin %4.0f \ ///
 HSAT bin %4.0f \ ///
 AHI_n conts %4.0f \ ///
 OSASeverity cat %4.0f \ ///
+EpworthSleepinessScaleAtDiag conts %4.0f \ ///
+excessive_sleepiness bin %4.0f \ ///
 LowestSpO2 conts %4.0f \ ///
 MinBelow89 conts %4.0f \ ///
 PercentageofUsage conts %4.0f \ ///
@@ -152,82 +187,82 @@ AvgUsagemin conts %4.0f \ ///
 FlowAHI conts %4.0f \ ///
 ) ///
 nospace percent_n onecol total(before) ///
-saving("table 1 normals.xlsx", replace)
+saving("Results and Figures/$S_DATE/table 1 normals.xlsx", replace)
+
 
 *** Factors that might influence whether or not a patient meets adherence targets
 
-*Logistic Regression for meeting goals or not - NO IMPUTATION; used only as as sensitivity analysis
-logistic Goals age_decade ib0.Female bmi_5 Smoking HSAT FlowAHI_per_10 AHI_per_10 desat_per_10
+*Non-imputed Logistic Regression for meeting goals or not
+logistic Goals age_decade ib0.Female bmi_5 i.Smoking i.HSAT c.FlowAHI_per_10 c.AHI_per_10 c.desat_per_10 c.EpworthSleepinessScaleAtDiag
 estimates store logistic_goals
+estat gof, group(10) table
+lroc //0.699
+esttab, ci pr2 wide
 
-//Average Marginal effects of each predictor: 
-margins, dydx(age_decade ib0.Female bmi_5 Smoking HSAT FlowAHI_per_10 AHI_per_10 desat_per_10) post
+
+//Average Marginal effects of each predictor - not utilized in manuscript: 
+margins, dydx(age_decade ib0.Female bmi_5 i.Smoking HSAT FlowAHI_per_10 AHI_per_10 desat_per_10 EpworthSleepinessScaleAtDiag) post
 estimates store goals_margins
-outreg2 using goals_margins, word append ctitle(Meeting Adherence Targets) dec(2) sdec(2) stat(coef ci pval) title(Factors associated w treatment adherence) label 
+//outreg2 using goals_margins, word append ctitle(Meeting Adherence Targets) dec(2) sdec(2) stat(coef ci pval) title(Factors associated w treatment adherence) label 
 marginsplot, horizontal xline(0) yscale(reverse) recast(scatter)
 
-
-*Linear Regression for average nightly ussage - used to estimate R2 of medical factors
-regress AvgUsagemin age_decade Female bmi_5 Smoking HSAT FlowAHI_per_10 AHI_per_10 desat_per_10
-estimates store avg_usage_reg
-vif, unc
-
-predict resid, residuals
-qnorm resid
-swilk resid
+*Logistic Regression for meeting goals or not (sensitivity analysis where missing = no)
+logistic GoalsSens c.age_decade i.Female c.bmi_5 i.Smoking i.HSAT c.FlowAHI_per_10 c.AHI_per_10 c.desat_per_10 c.EpworthSleepinessScaleAtDiag
 
 
-predict d , cooksd  // Cook's D
-list PercentageofUsage age_decade Female bmi_5 Smoking Hypertension HSAT FlowAHI_per_10 AHI_per_10 desat_per_10 d if  d > 4/_N  // outlier if Cook's D > 4/n
 
-nmissing
+// -------VISUALIZATIONS-------
 
-set scheme s1color  
+//set scheme s1color  
 set scheme cleanplots
-
+//set scheme white_tableau
+//set scheme white_w3d
 
 //relabels for figure to allow superscripts and greater than or equal to's =
 //label variable wt_cat "Weight Category (BMI (kg/m^2)"
 //label define age_label 0 "18-29" 1 "30-39" 2 "40-49" 3 "50-59" 4 "{&ge}60" 
 //label variable BMI "BMI (kg/m{superscript:{bf:2}})"
 
-label define PIfemalelab 0 "Male (n=101)" 1 "Female (n=44)"
+
+hist AHI_n, xsize(8) ysize(5)
+graph export "Results and Figures/$S_DATE/AHI_Histogram.eps", as(eps) replace
+
+hist EpworthSleepinessScaleAtDiag, discrete freq xsize(8) ysize(5) ytitle("Count (n)") xtitle("Epworth Sleepiness Score (ESS) at referral")
+graph export "Results and Figures/$S_DATE/ESS_Histogram.eps", as(eps) replace
+
+label define PIfemalelab 0 "Male (n=97)" 1 "Female (n=44)"
 label values Female PIfemalelab
 
-// Figure Used for Appendix
-catplot OSASeverity, over(Female) stack asyvars percent(Female) yla(0(10)100) ytitle("Percentage (%)") graphregion(color(white)) recast(bar) bar(1, color(gs14)) bar(2, color(gs9)) bar(3, color(gs4)) legend(off) blabel(name, position(center) color(black))
+histogram MinBelow89, by(Female, note("In-lab testing performed at ~1300m elevation above sea level")) percent bin(10) ytitle("Percentage, by gender") xsize(8) ysize(5)
+graph export "Results and Figures/$S_DATE/FigureS2.eps", as(eps) replace
 
-//figure 1	
-catplot OSASeverity, over(age_cat) by(Female, note("")) asyvars ytitle("Number of Patients (n)") recast(bar) b1title("Age") bar(1, color(gs12)) bar(2, color(gs8)) bar(3, color(gs4)) legend(rows(1) size(small) title("Severity of Sleep Apnea", size(small))symplacement(center)) 
+catplot OSASeverity, over(Female) stack asyvars percent(Female) yla(0(10)100) ytitle("Percentage (%)") graphregion(color(white)) recast(bar) bar(1, color(gs14)) bar(2, color(gs9)) bar(3, color(gs4)) legend(off) blabel(name, position(center) color(black)) xsize(8) ysize(5)
+graph export "Results and Figures/$S_DATE/FigureS1.eps", as(eps) replace
 
-//figure 2 - manually removed redundant y axis 
-catplot OSASeverity, over(wt_cat) by(Female, note(" ")) asyvars ytitle("Number of Patients (n)") bar(1, color(gs12)) bar(2, color(gs8)) bar(3, color(gs4)) legend(rows(1) size(small) symplacement(center) title("Severity of Sleep Apnea", size(small)))
 
-// Supplement.
-//note: replace comment by testing performed at elevation 4500 ft
-histogram MinBelow89, by(Female) bin(10) percent /// 
-xtitle("Minutes of sleep time with SpO2 <89%") ///
-ytitle("Percentage of Men or Women")
+catplot OSASeverity, percent(Female) over(age_cat) by(Female, note(""))  asyvars ytitle("Percentage of patients of the same gender (%)") recast(bar) b1title("Age") bar(1, color(gs12)) bar(2, color(gs8)) bar(3, color(gs4)) legend(rows(1) size(small) title("Severity of Sleep Apnea", size(small))symplacement(center)) xsize(8) ysize(5)
+graph export "Results and Figures/$S_DATE/Figure1.eps", as(eps) replace
+
+catplot OSASeverity, percent(Female) over(wt_cat) by(Female, note(" ")) asyvars ytitle("Percentage of patients of the same gender (%)") bar(1, color(gs12)) bar(2, color(gs8)) bar(3, color(gs4)) legend(rows(1) size(small) symplacement(center) title("Severity of Sleep Apnea", size(small))) xsize(8) ysize(5)
+graph export "Results and Figures/$S_DATE/Figure2.eps", as(eps) replace
 
 
 *** Multile Imputation with Chained Equations
-
 *For 70% Usage
 mi set mlong
-mi register imputed Goals age_decade Female bmi_5 Smoking HSAT FlowAHI_per_10 AHI_per_10 desat_per_10
-mi impute chained (regress) age_decade bmi_5 FlowAHI_per_10 AHI_per_10 desat_per_10 (logit) Goals Female Smoking HSAT , add(10) rseed(900)
+mi register imputed Goals age_decade Female bmi_5 Smoking HSAT FlowAHI_per_10 AHI_per_10 desat_per_10 EpworthSleepinessScaleAtDiag
+mi impute chained (regress) age_decade bmi_5 FlowAHI_per_10 AHI_per_10 desat_per_10 EpworthSleepinessScaleAtDiag (logit) Goals Female Smoking HSAT , add(10) rseed(900)
 
-mi xeq 0 1 5: sum Goals age_decade Female bmi_5 Smoking HSAT FlowAHI_per_10 AHI_per_10 desat_per_10
-mi estimate, or dots: logit Goals age_decade Female bmi_5 Smoking HSAT AHI_per_10 desat_per_10 FlowAHI_per_10 
-
-mimrgns ,dydx(*)
-mimrgns , dydx(age_decade Female bmi_5 Smoking HSAT AHI_per_10 desat_per_10 FlowAHI_per_10) predict(pr)
+mi xeq 0 1 5: sum Goals age_decade Female bmi_5 Smoking HSAT FlowAHI_per_10 AHI_per_10 desat_per_10 EpworthSleepinessScaleAtDiag
+mi estimate, or dots: logit Goals c.age_decade i.Female c.bmi_5 i.Smoking i.HSAT c.AHI_per_10 c.desat_per_10 c.FlowAHI_per_10 c.EpworthSleepinessScaleAtDiag, coeflegend
 
 estimates store mi_goals
 
-mibeta Goals age_decade Female bmi_5 Smoking HSAT AHI_per_10 desat_per_10 FlowAHI_per_10, vce(robust)
 
 //figure 3
-coefplot mi_goals, drop(_cons) eform xscale(log) xtitle("Adjusted Odds Ratio of {&ge}70% Days Used for {&ge}4hrs", size(medsmall)) xlabel(0.125 0.25 0.5 1 2 4 8) xline(1) xscale(extend) yscale(extend)  ylabel(,labsize(medsmall)) ciopts(recast(rcap))
+coefplot mi_goals, drop(_cons) eform xscale(log) baselevels xtitle("Adjusted Odds Ratio of {&ge}70% Days Used for {&ge}4hrs", size(medsmall)) xlabel(0.125 0.25 0.5 1 2 4 8) xline(1) xscale(extend) yscale(extend)  ylabel(,labsize(medsmall)) ciopts(recast(rcap)) xsize(8) ysize(5)
+graph export "Results and Figures/$S_DATE/Figure3.eps", as(eps) replace
+//Note - improving the labels manually is the way to go
+
 
 log close
