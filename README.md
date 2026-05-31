@@ -177,3 +177,51 @@ This repository is released under the **MIT License** (see [`LICENSE`](./LICENSE
 
 - EPS outputs are publication‑quality vector graphics compatible with most journals.
 - If you encounter “scheme not found” warnings (e.g., a custom graph scheme), either install the scheme of your choice or remove the `scheme()` option in plotting calls.
+
+## LLM and Repository Readiness Notes
+
+### Description
+Severity Comorbidities and Adherence to Therapy in Native Hawaiians Pacific Islanders With Obstructive Sleep Apnea
+
+### Instructions
+Start with this README, then inspect the files listed under Repository Layout. For computational workflows, run commands from the repository root and avoid committing generated outputs unless a release explicitly calls for them.
+
+### Authors, Funding, and Acknowledgments
+Maintainer: Brian W. Locke (`@reblocke`, ORCID 0000-0002-3588-5238). Preserve any project-specific author, funding, and acknowledgment details already listed elsewhere in the repository or accompanying publication.
+
+### Repository Layout
+- `.DS_Store`
+- `AHI_Histogram.eps`
+- `ESS_Histogram.eps`
+- `Figure1.eps`
+- `Figure2.eps`
+- `Figure2.gph`
+- `Figure3.eps`
+- `FigureS1.eps`
+- `FigureS2.eps`
+- `LICENSE`
+- `PI Stats - Final.do`
+- `README.md`
+- `table 1 gender.xlsx`
+- `table 1 normals.xlsx`
+
+### Data and Codebook
+Clinical data likely restricted; verify no PHI
+
+### Workflow / Script Order
+stata-mp -b do "PI Stats - Final.do"
+
+### Dependencies / Environment
+Stata and repo README
+
+### Citation
+Preferred scholarly citation: https://doi.org/10.5664/jcsm.10472. Cite this repository with the GitHub URL and the commit or release used.
+
+### License
+Repository license status: MIT. See the root license file when present. Third-party and publisher materials remain under their original terms.
+
+### Manuscript Status
+Local manuscript draft candidates exist; publisher-policy check needed before Markdown Publisher text not copied; code license present
+
+### Contact
+Maintainer: Brian W. Locke (`@reblocke`). Use GitHub issues or pull requests for repository-specific questions when the repository is public.
