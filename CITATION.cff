@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite the accompanying work and this repository."
+title: "Native Hawaiians/Pacific Islanders OSA Burden: repository materials"
+type: software
+repository-code: "https://github.com/reblocke/NHPI-OSA-Burden"
+authors:
+  - family-names: Locke
+    given-names: Brian W.
+  - family-names: Sundar
+    given-names: D. R.
+  - family-names: Ryujin
+    given-names: D.
+preferred-citation:
+  type: article
+  title: "Severity, Comorbidities, and Adherence to Therapy in Native Hawaiians/Pacific-Islanders With Obstructive Sleep Apnea"
+  authors:
+    - family-names: Locke
+      given-names: Brian W.
+    - family-names: Sundar
+      given-names: D. R.
+    - family-names: Ryujin
+      given-names: D.
+  doi: "10.5664/jcsm.10472"
