@@ -1,0 +1,22 @@
+# Restricted clinical data
+data/
+Pacific Islander Data New - ESS.xlsx
+*.dta
+
+# Generated Stata outputs
+outputs/
+Results and Figures/
+*.log
+*.smcl
+*.tmp
+*.ster
+*.gph
+
+# Local OS/editor files
+.DS_Store
+.idea/
+.vscode/
+
+# Caches
+__pycache__/
+.pytest_cache/
