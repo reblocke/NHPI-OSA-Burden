@@ -1,23 +1,39 @@
 cff-version: 1.2.0
-message: "If you use this repository, please cite the accompanying work and this repository."
-title: "Native Hawaiians/Pacific Islanders OSA Burden: repository materials"
+message: "If you use this repository, please cite the accompanying article and the repository version used."
 type: software
-repository-code: "https://github.com/reblocke/NHPI-OSA-Burden"
+title: "NHPI-OSA-Burden"
+abstract: "Stata analysis code for severity, comorbidities, and positive airway pressure adherence among Native Hawaiian/Pacific Islander patients with obstructive sleep apnea."
 authors:
   - family-names: Locke
     given-names: Brian W.
-  - family-names: Sundar
-    given-names: D. R.
-  - family-names: Ryujin
-    given-names: D.
+    orcid: "https://orcid.org/0000-0002-3588-5238"
+repository-code: "https://github.com/reblocke/NHPI-OSA-Burden"
+url: "https://github.com/reblocke/NHPI-OSA-Burden"
+license: MIT
+keywords:
+  - Native Hawaiian/Pacific Islander
+  - obstructive sleep apnea
+  - positive airway pressure
+  - sleep medicine
+  - health disparities
+  - Stata
+  - reproducible research
 preferred-citation:
   type: article
-  title: "Severity, Comorbidities, and Adherence to Therapy in Native Hawaiians/Pacific-Islanders With Obstructive Sleep Apnea"
+  title: "Severity, comorbidities, and adherence to therapy in Native Hawaiians/Pacific Islanders with obstructive sleep apnea"
   authors:
     - family-names: Locke
       given-names: Brian W.
+      orcid: "https://orcid.org/0000-0002-3588-5238"
     - family-names: Sundar
-      given-names: D. R.
+      given-names: Divya J.
     - family-names: Ryujin
-      given-names: D.
+      given-names: Darin
+  year: 2023
+  journal: "Journal of Clinical Sleep Medicine"
+  volume: "19"
+  issue: "5"
+  start: "967"
+  end: "974"
   doi: "10.5664/jcsm.10472"
+  url: "https://jcsm.aasm.org/doi/10.5664/jcsm.10472"

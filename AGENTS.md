@@ -1,29 +1,50 @@
 # AGENTS
 
 ## Project Purpose
-Severity Comorbidities and Adherence to Therapy in Native Hawaiians Pacific Islanders With Obstructive Sleep Apnea
 
-## Public and Data-Safety Rules
-- Treat this repository as public. Do not add PHI, restricted datasets, credentials, private drafts, or publisher-formatted article text.
-- Clinical data likely restricted; verify no PHI
-- Manuscript status: Local manuscript draft candidates exist; publisher-policy check needed before Markdown
+This public repository contains Stata analysis code and historical aggregate outputs for the Journal of Clinical Sleep Medicine article "Severity, comorbidities, and adherence to therapy in Native Hawaiians/Pacific Islanders with obstructive sleep apnea" (DOI `10.5664/jcsm.10472`, PMID `36727487`, PMCID `PMC10152360`).
 
-## How to Orient Quickly
-- Start with `README.md` for project scope, workflow, data notes, citation, and license information.
-- Use `CITATION.cff` for structured citation metadata when present.
-- Inspect scripts/notebooks before running them; do not assume generated outputs are current.
+## Public And Data-Safety Rules
+
+- Treat the repository as public.
+- Do not commit the source workbook, row-level derived datasets, patient identifiers, PHI, credentials, local absolute paths, private drafts, or publisher-formatted article files.
+- Link the DOI, PubMed, and PMC records instead of copying full article text into Markdown.
+- Keep regenerated outputs under ignored folders such as `outputs/stata/`.
+- The tracked EPS/GPH/XLSX files are historical aggregate artifacts. Do not replace them from restricted data without explicit review.
+
+## How To Orient Quickly
+
+1. Read `README.md` for scope, article identifiers, run commands, data restrictions, citation, and license.
+2. Read `llms.txt` for a compact machine-readable summary and agent cautions.
+3. Use `data_dictionary.md` and `data_dictionary.csv` for expected workbook fields and derived variables.
+4. Inspect `PI Stats - Final.do` before running; full execution requires the restricted private workbook.
 
 ## Workflow
-From the repository root, use this as the initial run guidance:
 
-```bash
-stata-mp -b do "PI Stats - Final.do"
+From the repository root:
+
+```stata
+do "PI Stats - Final.do"
 ```
 
-If the command is a placeholder, refine it after reading the local scripts and existing README.
+Optional explicit paths:
+
+```stata
+do "PI Stats - Final.do" "path/to/Pacific Islander Data New - ESS.xlsx" "outputs/stata"
+```
+
+Full execution should fail clearly if the restricted local workbook is absent.
 
 ## Verification Before Publishing Changes
+
+- Validate `CITATION.cff` after citation edits.
+- Parse `data_dictionary.csv` after dictionary edits.
 - Run `git diff --check`.
-- Validate `CITATION.cff` as YAML after citation edits.
-- Do not commit generated outputs, logs, caches, virtual environments, `.DS_Store`, or checkpoint files unless intentionally released.
-- For clinical or collaborator data, confirm that no row-level restricted data or identifiers are included.
+- Search for stale generic LLM-readiness text, manual working-directory placeholders, root analysis datasets, and restricted workbook files before pushing.
+- If Stata is available, run a batch smoke check; otherwise document that Stata was unavailable locally.
+
+## Documentation Standards
+
+- Keep `README.md`, `llms.txt`, `AGENTS.md`, `CITATION.cff`, and data dictionary files internally consistent.
+- Preserve DOI `10.5664/jcsm.10472`, PMID `36727487`, PMCID `PMC10152360`, and article metadata unless a source-backed correction is made.
+- Mark inferred data dictionary fields as `needs_review` rather than inventing unavailable definitions.

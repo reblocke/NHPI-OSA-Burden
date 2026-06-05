@@ -1,227 +1,140 @@
-# NHPI‑OSA‑Burden
+# NHPI-OSA-Burden
 
-> Stata code and outputs that accompany the manuscript **“Severity, comorbidities, and adherence to therapy in Native Hawaiians/Pacific Islanders with obstructive sleep apnea”** (Journal of Clinical Sleep Medicine, 2023).
+[![DOI](https://img.shields.io/badge/DOI-10.5664%2Fjcsm.10472-blue)](https://doi.org/10.5664/jcsm.10472)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Citation File Format](https://img.shields.io/badge/citation-CITATION.cff-green)](CITATION.cff)
 
----
+Stata code and historical aggregate outputs for the Journal of Clinical Sleep Medicine article **"Severity, comorbidities, and adherence to therapy in Native Hawaiians/Pacific Islanders with obstructive sleep apnea."** The workflow analyzes a restricted chart-review workbook to describe obstructive sleep apnea severity, comorbidities, symptoms, and positive airway pressure adherence among Native Hawaiian/Pacific Islander patients evaluated at a single academic sleep center.
 
-## Links & persistent IDs
+## Article And Repository
 
-- **Paper (DOI):** https://doi.org/10.5664/jcsm.10472  
-  PubMed: https://pubmed.ncbi.nlm.nih.gov/36727487/  
-  PubMed Central (open access): https://pmc.ncbi.nlm.nih.gov/articles/PMC10152360/
-- **This repository:** https://github.com/reblocke/NHPI-OSA-Burden
-- **License:** MIT (see [`LICENSE`](./LICENSE))
+| Item | Link or identifier |
+| --- | --- |
+| Final article | [Journal of Clinical Sleep Medicine](https://jcsm.aasm.org/doi/10.5664/jcsm.10472) |
+| DOI | [10.5664/jcsm.10472](https://doi.org/10.5664/jcsm.10472) |
+| PubMed | [PMID 36727487](https://pubmed.ncbi.nlm.nih.gov/36727487/) |
+| NLM full-text record | [PMCID PMC10152360](https://pmc.ncbi.nlm.nih.gov/articles/PMC10152360/) |
+| Code repository | <https://github.com/reblocke/NHPI-OSA-Burden> |
+| License | MIT for repository code and documentation |
 
----
+The PMC article is linked for open-access reading and machine discovery. Full manuscript text is not mirrored in this repository.
 
-## How to cite
+## Authors, Funding, And Disclosures
 
-If you use this code or reproduce the figures/tables, please cite the paper:
+Article authors: Brian W. Locke, Divya J. Sundar, and Darin Ryujin. Repository maintainer: Brian W. Locke (`@reblocke`; ORCID `0000-0002-3588-5238`).
 
-> Locke BW, Sundar DJ, Ryujin D. **Severity, comorbidities, and adherence to therapy in Native Hawaiians/Pacific Islanders with obstructive sleep apnea.** *J Clin Sleep Med.* 2023;19(5):967–974. doi:10.5664/jcsm.10472
+The final article is the source of record for funding, acknowledgments, and disclosures. It reports research support for Brian W. Locke from NIH Ruth L. Kirschstein National Research Service Award `5T32HL105321` and the American Thoracic Society; the authors reported no conflicts of interest.
 
-You may also cite the repository (optionally include a commit hash or release tag to pin the exact version used).
+## Data Access
 
----
+The source workbook is restricted patient-level clinical data and is **not public**. Do not commit raw workbooks, row-level derived datasets, patient identifiers, logs containing row-level values, PHI, or private drafts.
 
-## Quick start (reproduce the main outputs)
+Expected private input:
 
-**Requirements**
+| Workbook | Sheet | Default local path |
+| --- | --- | --- |
+| `Pacific Islander Data New - ESS.xlsx` | `all` | `data/private/Pacific Islander Data New - ESS.xlsx` |
 
-- **Stata** (developed with Stata **17**; earlier versions may work but are untested)
-- OS: Windows/macOS/Linux
-- Community/user-written Stata packages (install once in Stata):
-  ```stata
-  ssc install mdesc, replace
-  ssc install catplot, replace
-  ssc install coefplot, replace
-  ssc install estout, replace        // provides esttab
-  ssc install table1_mc, replace
-  ssc install tab3way, replace
-  // optional utilities sometimes used in diagnostics:
-  net install spost13_ado, from("https://www.indiana.edu/~jslsoc/stata")
-  ```
+See [data_dictionary.md](data_dictionary.md) and [data_dictionary.csv](data_dictionary.csv) for expected source variables, dropped/private fields, derived variables, and output artifacts.
 
-**1) Get the code**
+## Repository Layout
 
-```bash
-git clone https://github.com/reblocke/NHPI-OSA-Burden.git
-cd NHPI-OSA-Burden
+| Path | Role |
+| --- | --- |
+| `PI Stats - Final.do` | Main Stata workflow for importing, cleaning, deriving variables, creating tables/figures, and modeling PAP adherence |
+| `CITATION.cff` | Structured repository and article citation metadata |
+| `llms.txt` | Machine-readable repository summary and agent guidance |
+| `AGENTS.md` | Repository-specific instructions for coding agents |
+| `data_dictionary.md` / `data_dictionary.csv` | Human-readable and machine-usable data dictionary |
+| Root `Figure*.eps`, histogram `.eps`, `Figure2.gph`, and `table 1*.xlsx` | Historical aggregate publication artifacts retained for reference |
+
+## Quick Start
+
+Install Stata 17 or newer, then install required user-written packages once:
+
+```stata
+ssc install mdesc, replace
+ssc install nmissing, replace
+ssc install catplot, replace
+ssc install coefplot, replace
+ssc install estout, replace
+ssc install table1_mc, replace
+ssc install tab3way, replace
+net install spost13_ado, from("https://www.indiana.edu/~jslsoc/stata")
+net install cleanplots, from("https://tdmize.github.io/data") replace
+ssc install schemepack, replace
 ```
 
-**2) Provide the input data**
-
-The analysis script expects an Excel workbook named:
-
-```
-Pacific Islander Data New - ESS.xlsx
-```
-
-with a sheet named `all`. Place this file at the repository root. (See **Data** below for expected columns.)
-
-**3) Run the analysis**
-
-Open Stata and set the working directory to the repo root, then run:
+Run from the repository root with the default restricted workbook path:
 
 ```stata
 do "PI Stats - Final.do"
 ```
 
-Outputs (figures and tables) are written under:
+Optional arguments allow a different private workbook and output root:
 
-```
-Results and Figures/<today's date>/
-```
-
-> Note: Some figure labels were fine-tuned manually. The exported `.eps` files match the manuscript figures; a `.gph` file is included to facilitate any final adjustments in the Stata Graph Editor.
-
----
-
-## What this repo contains
-
-```
-PI Stats - Final.do          # Main analysis script (imports, derives variables, produces tables/figures)
-Figure1.eps                  # Manuscript Figure 1 (exported by the .do file)
-Figure2.eps                  # Manuscript Figure 2 (exported by the .do file)
-Figure3.eps                  # Manuscript Figure 3 (exported by the .do file)
-FigureS1.eps, FigureS2.eps   # Supplementary figures (exported by the .do file)
-AHI_Histogram.eps            # Exploratory figure (distribution of AHI)
-ESS_Histogram.eps            # Exploratory figure (distribution of ESS)
-Figure2.gph                  # Stata graph file to tweak Figure 2 if needed
-table 1.xlsx                 # Baseline characteristics table
-table 1 gender.xlsx          # Baseline by sex
-table 1 normals.xlsx         # “Normal distributions” variant of Table 1
-LICENSE                      # MIT
-README.md                    # (this file)
+```stata
+do "PI Stats - Final.do" "path/to/Pacific Islander Data New - ESS.xlsx" "outputs/stata"
 ```
 
-> The EPS and XLSX artifacts in the repo were generated by the Stata script and retained here for reference/reuse.
+Batch example:
 
----
+```bash
+stata-mp -b do "PI Stats - Final.do"
+```
 
-## Results mapping (paper ↔ code/outputs)
+The script writes regenerated outputs to `outputs/stata/<date>/` by default. Full execution requires the restricted workbook.
 
-| Manuscript item | What it shows | Script fragment (indicative) | Output file(s) |
-|---|---|---|---|
-| **Figure 1** | Distribution of **mild/moderate/severe OSA** by **age** and **sex** | `catplot OSASeverity, percent(Female) over(age_cat) by(Female ...)` | `Results and Figures/<date>/Figure1.eps` |
-| **Figure 2** | Distribution of OSA severity by **BMI category** and **sex** | `catplot OSASeverity, percent(Female) over(wt_cat) by(Female ...)` | `Results and Figures/<date>/Figure2.eps` |
-| **Figure 3** | Predictors of meeting PAP adherence target (≥4h on ≥70% nights); logistic regression with MI | `mi estimate: logit Goals ...` → `coefplot mi_goals` | `Results and Figures/<date>/Figure3.eps` |
-| **Table 1** | Baseline demographics, comorbidities, sleep metrics | `table1_mc, by(Female/OSASeverity) ... saving(...)` | `Results and Figures/<date>/table 1.xlsx` (and gender/normals variants) |
-| **Supplementary** | Sex‑stratified distributions, SpO₂ time <89% | `histogram MinBelow89, by(Female ...)` etc. | `FigureS1.eps`, `FigureS2.eps` |
+## Workflow And Outputs
 
-> **Severity thresholds:** mild (AHI 5–15 events/hr), moderate (15–30), severe (>30).
+The Stata workflow:
 
----
+1. Imports the restricted Excel sheet `all`, removes scratch rows, drops duplicates, and drops obvious PHI fields if present.
+2. Derives analysis variables including `Female`, `HSAT`, `OSASeverity`, `wt_cat`, `age_cat`, `excessive_sleepiness`, `Goals`, `GoalsSens`, `age_decade`, `bmi_5`, `AHI_per_10`, `desat_per_10`, and `FlowAHI_per_10`.
+3. Runs missingness summaries, descriptive tables, logistic regression, sensitivity analyses, multiple imputation, and coefficient plots.
+4. Exports regenerated `.eps` figures and `.xlsx` tables under the output directory.
 
-## Data
+| Manuscript item | Script/output mapping |
+| --- | --- |
+| Figure 1 | OSA severity by age category and sex; `Figure1.eps` |
+| Figure 2 | OSA severity by BMI category and sex; `Figure2.eps` plus historical `Figure2.gph` |
+| Figure 3 | Adjusted odds ratios for PAP adherence target; `Figure3.eps` |
+| Supplementary figures | Sex-stratified OSA severity and SpO2 time below threshold; `FigureS1.eps`, `FigureS2.eps` |
+| Table 1 | Baseline demographics, comorbidities, sleep metrics, and adherence; `table 1.xlsx` and variants |
 
-The script reads `Pacific Islander Data New - ESS.xlsx` (sheet `all`) and expects the following columns (variable labels in parentheses). Names should match case/spelling below:
+Severity thresholds used by the script: mild OSA is AHI 5-15 events/hour, moderate OSA is AHI 15-30 events/hour, and severe OSA is AHI greater than 30 events/hour.
 
-- **Demographics & comorbidity:** `Sex` (used to derive `Female`), `Ageatsleepstudy`, `BMI`, `Smoking`, `Hypertension`, `DM`, `CAD`, `CHF`, `Renaldisease`, `Lungdisease`  
-- **Study type:** `Typeofsleepstudy` (recoded to `HSAT` vs in‑lab PSG)  
-- **Sleep metrics:** `AHI`, `REMAHI`, `NREMAHI`, `SupineAHI`, `ODI3`, `ODI4`, `LowestSpO2`, `Timebelow89minutes`, `Timebelow89percentage`  
-- **Symptoms & adherence:** `EpworthSleepinessScaleAtDiag` (ESS), `PercentageofUsage` (% nights with any PAP use), `AvgUsagemin` (avg nightly PAP minutes), `FlowAHI` (on‑treatment AHI from PAP device)
+## Historical Artifacts
 
-The script derives commonly used analysis variables, including:  
-`OSASeverity`, `wt_cat` (BMI categories), `age_cat` (age bins), `Goals` (adherence target met), `GoalsSens` (sensitivity definition), and scaling terms (e.g., `AHI_per_10`, `FlowAHI_per_10`, `desat_per_10`, `age_decade`, `bmi_5`).
+The root EPS, GPH, and XLSX files are aggregate historical outputs from the manuscript workflow. They are retained for reference and reuse, but newly regenerated outputs should stay under ignored `outputs/stata/` paths unless intentionally reviewed for release.
 
-> **Privacy:** The patient‑level workbook is **not** included. Use a de‑identified or synthetic dataset with the same schema to run the pipeline if you do not have access to the original data.
+## Citation
 
----
+If using this repository or reproducing its results, cite the final article and the repository commit or release used.
 
-## Reproducible workflow (what the `.do` file does)
+> Locke BW, Sundar DJ, Ryujin D. Severity, comorbidities, and adherence to therapy in Native Hawaiians/Pacific Islanders with obstructive sleep apnea. *J Clin Sleep Med.* 2023;19(5):967-974. doi:10.5664/jcsm.10472
 
-1. **Import & labeling.** Read Excel, label variables, and create analysis directories under `Results and Figures/<date>/`.
-2. **Derive analysis features.** Create age and BMI categories, HSAT vs PSG, scaled predictors, `excessive_sleepiness` (ESS≥11), and adherence outcomes (`Goals`, `GoalsSens`).
-3. **Quality checks.** Summarize missingness (`mdesc`) and perform data checks (`tab`, `tabstat`).
-4. **Tables.** Generate Table 1 variants with `table1_mc` and save as `.xlsx`.
-5. **Figures.** Export histograms/densities and the three manuscript figures as `.eps`. A `.gph` is included for Figure 2 to facilitate minor label edits in the Graph Editor.
-6. **Modeling.** Run logistic regression for adherence (complete‑case and multiple imputation via `mi impute chained`), plot coefficient forest plot with `coefplot`.
+```bibtex
+@article{Locke2023_NHPI_OSA_Burden,
+  title   = {Severity, comorbidities, and adherence to therapy in Native Hawaiians/Pacific Islanders with obstructive sleep apnea},
+  author  = {Locke, Brian W. and Sundar, Divya J. and Ryujin, Darin},
+  journal = {Journal of Clinical Sleep Medicine},
+  year    = {2023},
+  volume  = {19},
+  number  = {5},
+  pages   = {967--974},
+  doi     = {10.5664/jcsm.10472},
+  pmid    = {36727487},
+  pmcid   = {PMC10152360}
+}
+```
 
----
-
-## Stata packages used
-
-- `mdesc` (missingness summary)  
-- `catplot` (categorical plots)  
-- `coefplot` (coefficient plots)  
-- `esttab` from `estout` (table export)  
-- `table1_mc` (baseline table)  
-- `tab3way` (three‑way tables)
-
-See install commands in **Quick start**.
-
----
-
-## Funding & acknowledgements
-
-Please see the published article for the canonical wording of acknowledgements and any funding details. If you use or adapt this code, consider acknowledging the authors and linking to the paper.
-
----
-
-## Contributing, issues, and maintenance
-
-- Please open issues or pull requests on GitHub for bugs, questions, or improvements.
-- Maintainer: **Brian W. Locke** (GitHub: `reblocke`) — open an [issue](https://github.com/reblocke/NHPI-OSA-Burden/issues) for contact.
-- Status: research code archived for reproducibility; community contributions welcome.
-
----
+Machine-readable citation metadata are available in [CITATION.cff](CITATION.cff).
 
 ## License
 
-This repository is released under the **MIT License** (see [`LICENSE`](./LICENSE)).
+Repository code and documentation are released under the MIT License; see [LICENSE](LICENSE). Restricted clinical data, source workbooks, row-level derived datasets, third-party materials, and publisher-formatted article files are excluded.
 
----
+## Contact
 
-## Notes
-
-- EPS outputs are publication‑quality vector graphics compatible with most journals.
-- If you encounter “scheme not found” warnings (e.g., a custom graph scheme), either install the scheme of your choice or remove the `scheme()` option in plotting calls.
-
-## LLM and Repository Readiness Notes
-
-### Description
-Severity Comorbidities and Adherence to Therapy in Native Hawaiians Pacific Islanders With Obstructive Sleep Apnea
-
-### Instructions
-Start with this README, then inspect the files listed under Repository Layout. For computational workflows, run commands from the repository root and avoid committing generated outputs unless a release explicitly calls for them.
-
-### Authors, Funding, and Acknowledgments
-Maintainer: Brian W. Locke (`@reblocke`, ORCID 0000-0002-3588-5238). Preserve any project-specific author, funding, and acknowledgment details already listed elsewhere in the repository or accompanying publication.
-
-### Repository Layout
-- `.DS_Store`
-- `AHI_Histogram.eps`
-- `ESS_Histogram.eps`
-- `Figure1.eps`
-- `Figure2.eps`
-- `Figure2.gph`
-- `Figure3.eps`
-- `FigureS1.eps`
-- `FigureS2.eps`
-- `LICENSE`
-- `PI Stats - Final.do`
-- `README.md`
-- `table 1 gender.xlsx`
-- `table 1 normals.xlsx`
-
-### Data and Codebook
-Clinical data likely restricted; verify no PHI
-
-### Workflow / Script Order
-stata-mp -b do "PI Stats - Final.do"
-
-### Dependencies / Environment
-Stata and repo README
-
-### Citation
-Preferred scholarly citation: https://doi.org/10.5664/jcsm.10472. Cite this repository with the GitHub URL and the commit or release used.
-
-### License
-Repository license status: MIT. See the root license file when present. Third-party and publisher materials remain under their original terms.
-
-### Manuscript Status
-Local manuscript draft candidates exist; publisher-policy check needed before Markdown Publisher text not copied; code license present
-
-### Contact
-Maintainer: Brian W. Locke (`@reblocke`). Use GitHub issues or pull requests for repository-specific questions when the repository is public.
+For public repository issues, use GitHub issues or pull requests. Do not post private clinical data in issues, pull requests, or logs.

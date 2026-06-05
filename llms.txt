@@ -1,0 +1,68 @@
+# NHPI-OSA-Burden
+
+Repository: https://github.com/reblocke/NHPI-OSA-Burden
+Primary article: Severity, comorbidities, and adherence to therapy in Native Hawaiians/Pacific Islanders with obstructive sleep apnea
+DOI: https://doi.org/10.5664/jcsm.10472
+Journal record: https://jcsm.aasm.org/doi/10.5664/jcsm.10472
+PubMed: https://pubmed.ncbi.nlm.nih.gov/36727487/
+PMC: https://pmc.ncbi.nlm.nih.gov/articles/PMC10152360/
+PMID: 36727487
+PMCID: PMC10152360
+
+## Purpose
+
+Stata workflow for the NHPI obstructive sleep apnea burden paper. The script loads a restricted chart-review Excel workbook, derives demographic, comorbidity, sleep-study, symptom, and PAP-adherence variables, then creates aggregate tables, figures, and adherence regression outputs.
+
+## Public Files
+
+- `README.md`: human-facing project overview, run command, data restrictions, citation, and license.
+- `PI Stats - Final.do`: main Stata analysis script.
+- `CITATION.cff`: structured repository and article citation metadata.
+- `data_dictionary.md` and `data_dictionary.csv`: expected workbook variables and derived fields.
+- `AGENTS.md`: repository-specific instructions for coding agents.
+- Root `.eps`, `.gph`, and `table 1*.xlsx` files: historical aggregate publication artifacts.
+
+## Restricted Input
+
+Do not commit the source workbook or row-level derived datasets. Default expected input:
+
+- `data/private/Pacific Islander Data New - ESS.xlsx`
+- sheet: `all`
+
+The script also accepts an explicit workbook path and output root:
+
+```stata
+do "PI Stats - Final.do" "path/to/Pacific Islander Data New - ESS.xlsx" "outputs/stata"
+```
+
+## Run Command
+
+```stata
+do "PI Stats - Final.do"
+```
+
+Batch example:
+
+```bash
+stata-mp -b do "PI Stats - Final.do"
+```
+
+Outputs are written under `outputs/stata/<date>/` by default. Full execution requires the restricted local workbook.
+
+## Data And License Boundaries
+
+Repository code and documentation are MIT licensed. Restricted clinical data, source workbooks, row-level derived outputs, third-party materials, and publisher-formatted article files are excluded. Link the DOI, PubMed, and PMC records instead of copying full article text into this repository.
+
+## Citation
+
+Preferred article citation: Locke BW, Sundar DJ, Ryujin D. Severity, comorbidities, and adherence to therapy in Native Hawaiians/Pacific Islanders with obstructive sleep apnea. J Clin Sleep Med. 2023;19(5):967-974. doi:10.5664/jcsm.10472.
+
+Use `CITATION.cff` for structured citation metadata and cite the repository commit or release used.
+
+## Agent Cautions
+
+- Treat the source workbook and all row-level exports as restricted.
+- Do not regenerate root-level historical artifacts from private data without explicit review.
+- Keep generated outputs in ignored `outputs/stata/`.
+- Preserve legacy analysis logic unless a change is explicitly scientific.
+- Validate CFF, README fences, and dictionary coverage before publishing changes.

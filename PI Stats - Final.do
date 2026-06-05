@@ -1,16 +1,38 @@
 * Pacific Islander Sleep Disordered Breathing Statistics
 
+version 17.0
 capture log close
-*log using temp.log
-* Data processing
 clear
-cd "" // choose folder containing data
-import excel "Pacific Islander Data New - ESS.xlsx", sheet("all") firstrow 
+args input_workbook output_root
+
+if `"`input_workbook'"' == "" {
+	local input_workbook `"data/private/Pacific Islander Data New - ESS.xlsx"'
+}
+if `"`output_root'"' == "" {
+	local output_root `"outputs/stata"'
+}
+
+local run_date = subinstr("$S_DATE", " ", "-", .)
+capture mkdir "outputs"
+capture mkdir `"`output_root'"'
+local output_dir `"`output_root'/`run_date'"'
+capture mkdir `"`output_dir'"'
+
+capture confirm file `"`input_workbook'"'
+if _rc {
+	di as error "Missing required restricted workbook: `input_workbook'"
+	di as error "Place it at data/private/Pacific Islander Data New - ESS.xlsx or pass it as the first do-file argument."
+	exit 601
+}
+
+log using `"`output_dir'/PI Stats - Final.log"', replace text
+
+* Data processing
+import excel `"`input_workbook'"', sheet("all") firstrow
+capture program drop datetime
 program define datetime 
 end
-
-capture mkdir "Results and Figures"
-capture mkdir "Results and Figures/$S_DATE/" //make new folder for figure output if needed
+tempfile pi_data
 
 *drop observations 146-223, these were just scratch pad calculations
 drop in 146/223 
@@ -19,7 +41,7 @@ drop if !missing(duplicate_flag) //drop 4 identified duplicates
 //Drop un-needed variables
 
 //PHI if present
-//drop Lastname Firstname MRN DOB
+capture drop Lastname Firstname MRN DOB
 //remaining variables
 drop OriginalAge Dateof1stsleepclinicvisit Dateofsleepstudy Heightftin Heightin Weightlbs CV1Met2CVMet3none4 Miscellaneous DurationofDownload duplicate_flag
 
@@ -142,13 +164,13 @@ label variable desat_per_10 "SpO2<89% (per 10% sleep time)"
 gen FlowAHI_per_10 = FlowAHI/10
 label variable FlowAHI_per_10 "AHI on Treatment"
 
-save PI_data, replace
+save "`pi_data'", replace
 
 *End of Data clean up
 
 *Begin data analysis
 
-use PI_data, clear
+use "`pi_data'", clear
 
 
 mdesc //tabulate missing data
@@ -183,7 +205,7 @@ AvgUsagemin conts %4.0f \ ///
 FlowAHI conts %4.0f \ ///
 ) ///
 nospace percent_n onecol total(before) ///
-saving("Results and Figures/$S_DATE/table 1 normals.xlsx", replace)
+saving("`output_dir'/table 1 normals.xlsx", replace)
 
 
 *Table 1 - version stratified by Gender
@@ -212,7 +234,7 @@ AvgUsagemin conts %4.0f \ ///
 FlowAHI conts %4.0f \ ///
 ) ///
 nospace percent_n onecol total(before) ///
-saving("Results and Figures/$S_DATE/table 1 gender.xlsx", replace)
+saving("`output_dir'/table 1 gender.xlsx", replace)
 
 *Table 1 - version stratified by Severity
 table1_mc, by(OSASeverity) ///
@@ -240,7 +262,7 @@ AvgUsagemin conts %4.0f \ ///
 FlowAHI conts %4.0f \ ///
 ) ///
 nospace percent_n onecol total(before) ///
-saving("Results and Figures/$S_DATE/table 1.xlsx", replace)
+saving("`output_dir'/table 1.xlsx", replace)
 
 *** Factors that might influence whether or not a patient meets adherence targets
 *Non-imputed Logistic Regression for meeting goals or not
@@ -282,10 +304,10 @@ set scheme cleanplots
 //label variable BMI "BMI (kg/m{superscript:{bf:2}})"
 
 hist AHI_n, xsize(8) ysize(5)
-graph export "Results and Figures/$S_DATE/AHI_Histogram.eps", as(eps) replace
+graph export "`output_dir'/AHI_Histogram.eps", as(eps) replace
 
 hist EpworthSleepinessScaleAtDiag, discrete freq xsize(8) ysize(5) ytitle("Count (n)") xtitle("Epworth Sleepiness Score (ESS) at referral")
-graph export "Results and Figures/$S_DATE/ESS_Histogram.eps", as(eps) replace
+graph export "`output_dir'/ESS_Histogram.eps", as(eps) replace
 
 catplot OSASeverity, over(EpworthSleepinessScaleAtDiag) stack asyvars ytitle("Percentage ") recast(bar) b1title("Age") bar(1, color(gs12)) bar(2, color(gs8)) bar(3, color(gs4)) legend(pos(6) rows(1) size(small) title("Severity of Sleep Apnea", size(small)) symplacement(center)) xsize(8) ysize(5)
 
@@ -303,20 +325,20 @@ label define PIfemalelab 0 "Male (n=97)" 1 "Female (n=44)"
 label values Female PIfemalelab
 
 histogram MinBelow89, by(Female, note("In-lab testing performed at ~1300m elevation above sea level")) percent bin(10) ytitle("Percentage, by gender") xsize(8) ysize(5)
-graph export "Results and Figures/$S_DATE/FigureS2.eps", as(eps) replace
+graph export "`output_dir'/FigureS2.eps", as(eps) replace
 
 catplot OSASeverity, over(Female) stack asyvars percent(Female) yla(0(10)100) ytitle("Percentage (%)") graphregion(color(white)) recast(bar) bar(1, color(gs14)) bar(2, color(gs9)) bar(3, color(gs4)) legend(off) blabel(name, position(center) color(black)) xsize(8) ysize(5)
-graph export "Results and Figures/$S_DATE/FigureS1.eps", as(eps) replace
+graph export "`output_dir'/FigureS1.eps", as(eps) replace
 
 catplot OSASeverity, percent(Female) over(age_cat) by(Female, note(""))  asyvars ytitle("Percentage of patients of the same gender (%)") recast(bar) b1title("Age") bar(1, color(gs12)) bar(2, color(gs8)) bar(3, color(gs4)) legend(rows(1) size(small) title("Severity of Sleep Apnea", size(small))symplacement(center)) xsize(8) ysize(5)
-graph export "Results and Figures/$S_DATE/Figure1.eps", as(eps) replace
+graph export "`output_dir'/Figure1.eps", as(eps) replace
 
 //figure 2
 //3 category version - 
 // TODO: [x]  manually remove redundant y axis label - this can be done in graph editor after the fact
 // [ ] this one is used
 catplot OSASeverity, percent(Female) over(wt_cat) by(Female, note(" ")) asyvars ytitle("Percentage of patients of the same gender (%)") bar(1, color(gs12)) bar(2, color(gs8)) bar(3, color(gs4)) legend(rows(1) size(small) symplacement(center) title("Severity of Sleep Apnea", size(small))) xsize(8) ysize(5)
-graph export "Results and Figures/$S_DATE/Figure2.eps", as(eps) replace
+graph export "`output_dir'/Figure2.eps", as(eps) replace
 
 //[ ] use in supplement. clean up labels etc. 
 twoway kdensity MinBelow89 if Female==1 || ///
@@ -356,7 +378,7 @@ estimates store mi_goals
 
 //figure 3
 coefplot mi_goals, drop(_cons) eform xscale(log) baselevels xtitle("Adjusted Odds Ratio of {&ge}70% Days Used for {&ge}4hrs", size(medsmall)) xlabel(0.125 0.25 0.5 1 2 4 8) xline(1) xscale(extend) yscale(extend)  ylabel(,labsize(medsmall)) ciopts(recast(rcap)) xsize(8) ysize(5)
-graph export "Results and Figures/$S_DATE/Figure3.eps", as(eps) replace
+graph export "`output_dir'/Figure3.eps", as(eps) replace
 //Note - improving the labels manually is the way to go
 
 log close
