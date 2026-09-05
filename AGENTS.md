@@ -13,6 +13,7 @@ This public repository contains Stata analysis code and historical aggregate out
 - The tracked EPS/GPH/XLSX files are historical aggregate artifacts. Do not replace them from restricted data without explicit review.
 
 ## How To Orient Quickly
+Consult only the entries relevant to the requested edit or run.
 
 1. Read `README.md` for scope, article identifiers, run commands, data restrictions, citation, and license.
 2. Read `llms.txt` for a compact machine-readable summary and agent cautions.
@@ -41,7 +42,7 @@ Full execution should fail clearly if the restricted local workbook is absent.
 - Parse `data_dictionary.csv` after dictionary edits.
 - Run `git diff --check`.
 - Search for stale generic LLM-readiness text, manual working-directory placeholders, root analysis datasets, and restricted workbook files before pushing.
-- If Stata is available, run a batch smoke check; otherwise document that Stata was unavailable locally.
+- For analysis/runner changes, perform applicable Stata verification within the authorized workflow. It requires a licensed runtime and the approved inputs; executable availability alone does not authorize a restricted-data run. Inspect generated logs and report unavailable data/package/runtime gates separately from static checks.
 
 ## Documentation Standards
 
